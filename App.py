@@ -13,7 +13,7 @@ def probar_bd():
         conec.close()
         
         return {
-            "mensaje":"database conenctada"
+            "mensaje":"database conectada"
         }
 
 @app.route("/api/hojas-vida/<int:id>")
