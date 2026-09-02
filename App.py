@@ -25,19 +25,15 @@ def registro_hoja_vida():
     correo_nuevo = datos ["correo"]
     
     #Consultar si el correo ya existe
-    cursor.execute("SELECT correo FROM hojas_vida WHERE correo = %s", (correo_nuevo,))
+    cursor.execute("SELECT correo FROM hojas_vida WHERE correo = %s", [correo_nuevo])
     busqueda = cursor.fetchone()
-    cursor.close()
-    conec.close()
     
-    if busqueda is not None:
-        correo_sql = busqueda[0]
+    if busqueda:
+        cursor.close()
+        conec.close()
         
-        if correo_sql == correo_nuevo:
-            print("El correo ya existe")
-            return True
-        print ("El correo está disponible")
-        return False
+
+        return {"Mensaje":"El correo ya existe"}
         
     sql = """INSERT INTO hojas_vida (nombre, edad, ciudad, correo, fotografia, programa, ficha, jornada) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
     valor = (
@@ -68,37 +64,21 @@ def obtener_hojasvidaid(id):
         "Mensaje":"Hoja de vida encontrada","id":id
     }
 
-@app.route("/api/hojas-vida")
+@app.route("/api/hojas-vida", methods = ["GET"])
 def obtener_hojasvida():
     #return{
     #    "mensaje":"Listado de hojas de vida"
     #}
-    hojas_vida =[
-        {
-            "id": 1,
-            "nombre":"Low",
-            "edad": 36,
-            "ciudad":"nuevo mundo",
-            "correo":"low@email.com",
-            "fotografia":"foto",
-            "programa":"ADSO",
-            "ficha":2222,
-            "jornada":"diurna"
-        },
-        {
-            "id": 2,
-            "nombre":"Usop",
-            "edad": 27,
-            "ciudad":"nuevomundo",
-            "correo":"usop@email.com",
-            "fotografia":"foto",
-            "programa":"fotografia",
-            "ficha":4444,
-            "jornada":"nocturna"
-        }
-    ]
+    conec = conectar_bd()
+    cursor = conec.cursor()
     
-    return hojas_vida
+    cursor.execute("SELECT * FROM hojas_vida")
+    listado = cursor.fetchall()
+            
+    cursor.close()
+    conec.close()
+    
+    return {"Mensaje":"Listado de hojas de vida", "":listado }
 
 if __name__ == '__main__':
     app.run(debug = True)
