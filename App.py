@@ -173,6 +173,7 @@ def actualizar_hoja_vida(id):
 #                    ESTUDIOS                  #
 #----------------------------------------------#
 
+#Registro estudios
 @app.route("/api/registro-estudios/<int:id>", methods = ["POST"])
 def registro_estudios(id):
     conec = conectar_bd()
@@ -190,7 +191,7 @@ def registro_estudios(id):
 
     sql = """INSERT INTO estudios (hoja_vida_id, nivel, institucion, titulo, anio_graduacion) VALUES (%s, %s, %s, %s, %s)"""
     valor = (
-        datos ["hoja_vida_id": id],
+        id,
         datos ["nivel"],
         datos ["institucion"],
         datos ["titulo"],
@@ -206,7 +207,39 @@ def registro_estudios(id):
     cursor.close()
     conec.close()
     
-    return {"Mensaje":"Estudo creado","id": id_generado}
+    return {"Mensaje":"Estudo creado","id": id_generado}, 201
+
+#Consultar estudios de una hoja de vida
+@app.route("/api/estudios-hoja-vida/<int:id>", methods = ["GET"])
+def estudios_hoja_vida(id):
+    conec = conectar_bd()
+    cursor = conec.cursor(buffered = True)
+    
+    #Validar si existe el id
+    cursor.execute("SELECT id FROM hojas_vida WHERE id = %s", (id,))
+    lista = cursor.fetchone()
+    
+    if lista is None:
+        cursor.close
+        conec.close
+        return {"Mensaje":"No se encontro id"}, 404
+    
+    #Validar si el id tiene estudios
+    cursor.execute("SELECT e.hoja_vida_id FROM estudios e INNER JOIN hojas_vida h ON e.hoja_vida_id = h.id WHERE h.id = %s;", (id,))
+    estudios = cursor.fetchall()
+    
+    if estudios is None:
+        conec.close()
+        cursor.close()
+        return {"Mensaje":"El id no tiene estudios"}, 404
+        
+    cursor.execute("SELECT h.id, e.id, h.nombre, e.nivel, e.institucion, e.titulo, e.anio_graduacion FROM hojas_vida h INNER JOIN estudios e ON h.id = e.hoja_vida_id WHERE h.id = %s", (id,))
+    datos = cursor.fetchall()
+    conec.close()
+    cursor.close()
+    return datos
+    
+    
 
 
 if __name__ == '__main__':
