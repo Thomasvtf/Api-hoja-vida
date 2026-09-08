@@ -156,7 +156,7 @@ def actualizar_hoja_vida(id):
             datos.get("fotografia"),
             datos ["programa"],
             datos ["ficha"],
-            datos ["programa"],
+            datos ["jornada"],
             id
         )
 
@@ -167,6 +167,47 @@ def actualizar_hoja_vida(id):
     conec.close()
     
     return {"Mensaje":"Hoja de vida actualizada","id": id}, 200
+
+
+#----------------------------------------------#
+#                    ESTUDIOS                  #
+#----------------------------------------------#
+
+@app.route("/api/registro-estudios/<int:id>", methods = ["POST"])
+def registro_estudios(id):
+    conec = conectar_bd()
+    cursor = conec.cursor(buffered = True)
+    datos = request.json
+    
+    #Verificar si existe el id de hoja de vida
+    cursor.execute("SELECT id FROM hojas_vida WHERE id = %s", (id,))
+    existe = cursor.fetchone()
+    
+    if existe is None:
+        cursor.close()
+        conec.close()
+        return {"Mensaje":"Id no existe"}, 404
+
+    sql = """INSERT INTO estudios (hoja_vida_id, nivel, institucion, titulo, anio_graduacion) VALUES (%s, %s, %s, %s, %s)"""
+    valor = (
+        datos ["hoja_vida_id": id],
+        datos ["nivel"],
+        datos ["institucion"],
+        datos ["titulo"],
+        datos ["anio_graduacion"],
+    )
+    
+    cursor.execute(sql,valor)
+    conec.commit()
+    
+    #Manejo del id de la hoja de vida
+    id_generado = cursor.lastrowid
+    
+    cursor.close()
+    conec.close()
+    
+    return {"Mensaje":"Estudo creado","id": id_generado}
+
 
 if __name__ == '__main__':
     app.run(debug = True)
