@@ -316,6 +316,73 @@ def eliminar_estudio(id):
         return {"Mensaje":"Estudio eliminado"}
     
     
+#------------------------------------------------------#
+#                    Experiencias                      #
+#------------------------------------------------------#
+
+#Registro experiencias
+@app.route("/api/registro-experiencia/<int:id>", methods = ["POST"])
+def registro_experiencia(id):
+    conec = conectar_bd()
+    cursor = conec.cursor(buffered = True)
+    datos = request.json
+    
+    #Verificar si existe el id de hoja de vida
+    cursor.execute("SELECT id FROM hojas_vida WHERE id = %s", (id,))
+    existe = cursor.fetchone()
+    
+    if existe is None:
+        cursor.close()
+        conec.close()
+        return {"Mensaje":"Id no existe"}, 404
+
+    sql = """INSERT INTO experiencias (hoja_vida_id, empresa, cargo, tiempo, funciones) VALUES (%s, %s, %s, %s, %s)"""
+    valor = (
+        id,
+        datos ["empresa"],
+        datos ["cargo"],
+        datos ["tiempo"],
+        datos ["funciones"],
+    )
+    
+    cursor.execute(sql,valor)
+    conec.commit()
+    
+    #Manejo del id de la hoja de vida
+    id_generado = cursor.lastrowid
+    
+    cursor.close()
+    conec.close()
+    
+    return {"Mensaje":"Experiencia creada","id": id_generado}, 201
+
+#Consultar experiencias de una hoja de vida
+@app.route("/api/experiencias-hoja-vida/<int:id>", methods = ["GET"])
+def experiencia_hoja_vida(id):
+    conec = conectar_bd()
+    cursor = conec.cursor(dictionary=True) 
+        
+    sql = """
+        SELECT h.id AS hoja_vida_id, h.nombre, e.id AS experiencia_id, 
+               e.empresa, e.cargo, e.tiempo, e.funciones 
+        FROM hojas_vida h 
+        LEFT JOIN experiencias e ON h.id = e.hoja_vida_id 
+        WHERE h.id = %s
+    """
+    cursor.execute(sql, (id,))
+    datos = cursor.fetchall()
+    
+    cursor.close()
+    conec.close()
+    
+    if not datos:
+        return {"Mensaje": "No se encontro la hoja de vida"}, 404
+        
+    if datos[0]['experiencia_id'] is None:
+        return {"Mensaje": "El id no tiene experiencias"}, 200 
+        
+    return {"estudios": datos}, 200
+
 
 
 if __name__ == '__main__':
