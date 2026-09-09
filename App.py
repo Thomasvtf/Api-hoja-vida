@@ -291,6 +291,31 @@ def actualizar_estudio(id):
     
     return {"Mensaje":"Hoja de vida actualizada","id": id}, 200
     
+#Eliminar estudio
+@app.route("/api/eliminar-estudio/<int:id>", methods = ["DELETE"])
+def eliminar_estudio(id):
+    conec = conectar_bd()
+    cursor = conec.cursor()
+    
+    cursor.execute("SELECT id FROM estudios WHERE id = %s", (id,))
+    
+    datos = cursor.fetchone()
+    
+    if datos is None:
+        cursor.close()
+        conec.close()
+        return{"Mensaje":"El id no existe"}, 404
+    else:
+        cursor.execute("DELETE FROM estudios WHERE id = %s", (id,))
+     
+        conec.commit()
+        
+        cursor.close()
+        conec.close()
+        
+        return {"Mensaje":"Estudio eliminado"}
+    
+    
 
 
 if __name__ == '__main__':
