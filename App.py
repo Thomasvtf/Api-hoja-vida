@@ -213,32 +213,83 @@ def registro_estudios(id):
 @app.route("/api/estudios-hoja-vida/<int:id>", methods = ["GET"])
 def estudios_hoja_vida(id):
     conec = conectar_bd()
+    cursor = conec.cursor(dictionary=True) 
+        
+    sql = """
+        SELECT h.id AS hoja_vida_id, h.nombre, e.id AS estudio_id, 
+               e.nivel, e.institucion, e.titulo, e.anio_graduacion 
+        FROM hojas_vida h 
+        LEFT JOIN estudios e ON h.id = e.hoja_vida_id 
+        WHERE h.id = %s
+    """
+    cursor.execute(sql, (id,))
+    datos = cursor.fetchall()
+    
+    cursor.close()
+    conec.close()
+    
+    if not datos:
+        return {"Mensaje": "No se encontro la hoja de vida"}, 404
+        
+    if datos[0]['estudio_id'] is None:
+        return {"Mensaje": "El id no tiene estudios"}, 200 
+        
+    return {"estudios": datos}, 200
+
+
+#Consultar un estudio especifico.
+@app.route("/api/consultar-estudio/<int:id>", methods = ["GET"])
+def consultar_estudio(id):
+    conec = conectar_bd()
+    cursor = conec.cursor(dictionary=True)
+    
+    sql = """SELECT * FROM estudios WHERE id = %s"""
+    
+    cursor.execute(sql, (id,))
+    datos = cursor.fetchone()
+    
+    cursor.close()
+    conec.close()
+    
+    if datos is None:
+        return {"Mensaje":"No se encontraron estudios"}, 200
+    
+    return {"estudios":datos}
+
+# Actualizar estudio
+@app.route("/api/actualizar-estudio/<int:id>", methods = ["PUT"])
+def actualizar_estudio(id):
+    datos = request.json
+    conec = conectar_bd()
     cursor = conec.cursor(buffered = True)
     
-    #Validar si existe el id
-    cursor.execute("SELECT id FROM hojas_vida WHERE id = %s", (id,))
-    lista = cursor.fetchone()
+    buscar = """SELECT id FROM estudios WHERE id = %s"""
+    cursor.execute(buscar,(id,))
+
+    result = cursor.fetchone()
     
-    if lista is None:
-        cursor.close
-        conec.close
-        return {"Mensaje":"No se encontro id"}, 404
-    
-    #Validar si el id tiene estudios
-    cursor.execute("SELECT e.hoja_vida_id FROM estudios e INNER JOIN hojas_vida h ON e.hoja_vida_id = h.id WHERE h.id = %s;", (id,))
-    estudios = cursor.fetchall()
-    
-    if estudios is None:
-        conec.close()
+    if result is None:
         cursor.close()
-        return {"Mensaje":"El id no tiene estudios"}, 404
-        
-    cursor.execute("SELECT h.id, e.id, h.nombre, e.nivel, e.institucion, e.titulo, e.anio_graduacion FROM hojas_vida h INNER JOIN estudios e ON h.id = e.hoja_vida_id WHERE h.id = %s", (id,))
-    datos = cursor.fetchall()
-    conec.close()
-    cursor.close()
-    return datos
+        conec.close()
+        return {"Mensaje":"No se encontro estudios"}, 404
+
+    #Actualizar hoja vida
+    sql = """UPDATE estudios SET nivel = %s, institucion = %s, titulo = %s, anio_graduacion = %s WHERE id = %s"""
+    valor = (
+            datos ["nivel"],
+            datos ["institucion"],
+            datos ["titulo"],
+            datos ["anio_graduacion"],
+            id
+        )
+
+    cursor.execute(sql,valor)
+    conec.commit()
     
+    cursor.close()
+    conec.close()
+    
+    return {"Mensaje":"Hoja de vida actualizada","id": id}, 200
     
 
 
