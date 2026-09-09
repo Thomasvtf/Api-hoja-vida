@@ -383,6 +383,26 @@ def experiencia_hoja_vida(id):
         
     return {"estudios": datos}, 200
 
+#Consultar una experiencia especifica.
+@app.route("/api/consultar-experiencia/<int:id>", methods = ["GET"])
+def consultar_experiencia(id):
+    conec = conectar_bd()
+    cursor = conec.cursor(dictionary=True)
+    
+    sql = """SELECT * FROM experiencias WHERE id = %s"""
+    
+    cursor.execute(sql, (id,))
+    datos = cursor.fetchone()
+    
+    cursor.close()
+    conec.close()
+    
+    if datos is None:
+        return {"Mensaje":"No se encontraron experiencias"}, 200
+    
+    return {"Experiencias":datos}
+
+
 
 
 if __name__ == '__main__':
