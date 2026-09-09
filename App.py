@@ -273,7 +273,7 @@ def actualizar_estudio(id):
         conec.close()
         return {"Mensaje":"No se encontro estudios"}, 404
 
-    #Actualizar hoja vida
+    #Actualizar estudios
     sql = """UPDATE estudios SET nivel = %s, institucion = %s, titulo = %s, anio_graduacion = %s WHERE id = %s"""
     valor = (
             datos ["nivel"],
@@ -289,7 +289,7 @@ def actualizar_estudio(id):
     cursor.close()
     conec.close()
     
-    return {"Mensaje":"Hoja de vida actualizada","id": id}, 200
+    return {"Mensaje":"Estudios actualizada","id": id}, 200
     
 #Eliminar estudio
 @app.route("/api/eliminar-estudio/<int:id>", methods = ["DELETE"])
@@ -402,7 +402,40 @@ def consultar_experiencia(id):
     
     return {"Experiencias":datos}
 
+# Actualizar experiencia
+@app.route("/api/actualizar-experiencia/<int:id>", methods = ["PUT"])
+def actualizar_experiencia(id):
+    datos = request.json
+    conec = conectar_bd()
+    cursor = conec.cursor(buffered = True)
+    
+    buscar = """SELECT id FROM experiencias WHERE id = %s"""
+    cursor.execute(buscar,(id,))
 
+    result = cursor.fetchone()
+    
+    if result is None:
+        cursor.close()
+        conec.close()
+        return {"Mensaje":"No se encontro experiencias"}, 404
+
+    #Actualizar experiencia
+    sql = """UPDATE experiencias SET empresa = %s, cargo = %s, tiempo = %s, funciones = %s WHERE id = %s"""
+    valor = (
+            datos ["empresa"],
+            datos ["cargo"],
+            datos ["tiempo"],
+            datos ["funciones"],
+            id
+        )
+
+    cursor.execute(sql,valor)
+    conec.commit()
+    
+    cursor.close()
+    conec.close()
+    
+    return {"Mensaje":"Experiencias actualizada","id": id}, 200
 
 
 if __name__ == '__main__':
