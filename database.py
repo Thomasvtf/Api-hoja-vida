@@ -5,7 +5,7 @@ def conectar_bd():
         host = "",
         user = "root",
         password = "",
-        database = "hojavida"
+        database = "hoja_vida"
     )
     
     return conexion
