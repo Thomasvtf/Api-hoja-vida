@@ -709,7 +709,49 @@ def eliminar_curso(id):
 
         return {"Mensaje": "Curso eliminado"}, 200
 
+#------------------------------------------------------#
+#                Hoja de vida completa                 #
+#------------------------------------------------------#
+@app.route("/api/hoja-vida-completa/<int:id>", methods=["GET"])
+def hoja_vida_completa(id):
+    conec = conectar_bd()
+    cursor = conec.cursor(dictionary=True)
 
+    # Consultar la hoja de vida
+    cursor.execute("SELECT * FROM hojas_vida WHERE id = %s", (id,))
+    hoja_vida = cursor.fetchone()
+
+    if hoja_vida is None:
+        cursor.close()
+        conec.close()
+        return {"Mensaje": "No se encontró la hoja de vida"}, 404
+
+    # Consultar estudios
+    cursor.execute("SELECT * FROM estudios WHERE hoja_vida_id = %s", (id,))
+    estudios = cursor.fetchall()
+
+    # Consultar experiencias
+    cursor.execute("SELECT * FROM experiencias WHERE hoja_vida_id = %s", (id,))
+    experiencias = cursor.fetchall()
+
+    # Consultar habilidades para cada experiencia
+    for experiencia in experiencias:
+        cursor.execute("SELECT * FROM habilidades WHERE experiencias_id = %s", (experiencia['id'],))
+        experiencia['habilidades'] = cursor.fetchall()
+
+    # Consultar cursos
+    cursor.execute("SELECT * FROM cursos WHERE hoja_vida_id = %s", (id,))
+    cursos = cursor.fetchall()
+
+    cursor.close()
+    conec.close()
+
+    return {
+        "hoja_vida": hoja_vida,
+        "estudios": estudios,
+        "experiencias": experiencias,
+        "cursos": cursos
+    }, 200
 
 if __name__ == '__main__':
     app.run(debug = True)
