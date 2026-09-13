@@ -1,6 +1,7 @@
 from flask import Flask, request
 from database import conectar_bd
 from flask_cors import CORS
+
 app = Flask(__name__)
 CORS(app)
 
@@ -24,7 +25,26 @@ def registro_hoja_vida():
     cursor = conec.cursor()
     datos = request.json
     
-    correo_nuevo = datos ["correo"]
+     # Limpieza de datos (El código que añadimos antes)
+    if isinstance(datos.get("correo"), dict):
+        sub_diccionario = datos["correo"]
+        correo_nuevo = sub_diccionario.get("correo")
+        nombre = sub_diccionario.get("nombre")
+        edad = sub_diccionario.get("edad")
+        ciudad = sub_diccionario.get("ciudad")
+        programa = sub_diccionario.get("programa")
+        ficha = sub_diccionario.get("ficha")
+        jornada = sub_diccionario.get("jornada")
+        fotografia = sub_diccionario.get("foto")
+    else:
+        correo_nuevo = datos.get("correo")
+        nombre = datos.get("nombre")
+        edad = datos.get("edad")
+        ciudad = datos.get("ciudad")
+        programa = datos.get("programa")
+        ficha = datos.get("ficha")
+        jornada = datos.get("jornada")
+        fotografia = datos.get("fotografia")
     
     #Consultar si el correo ya existe
     cursor.execute("SELECT correo FROM hojas_vida WHERE correo = %s", [correo_nuevo])
@@ -39,14 +59,14 @@ def registro_hoja_vida():
         
     sql = """INSERT INTO hojas_vida (nombre, edad, ciudad, correo, fotografia, programa, ficha, jornada) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
     valor = (
-        datos ["nombre"],
-        datos ["edad"],
-        datos ["ciudad"],
-        datos ["correo"],
-        datos.get("fotografia"),
-        datos ["programa"],
-        datos ["ficha"],
-        datos ["programa"]
+        nombre,
+        edad,
+        ciudad,
+        correo_nuevo,
+        fotografia,
+        programa,
+        ficha,
+        jornada
     )
     
     cursor.execute(sql,valor)
