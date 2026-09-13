@@ -201,7 +201,19 @@ def registro_estudios(id):
     conec = conectar_bd()
     cursor = conec.cursor(buffered = True)
     datos = request.json
-    
+
+    if isinstance(datos.get("nivel"), dict):
+        sub_diccionario = datos["nivel"]
+        nivel = sub_diccionario.get("nivel")
+        institucion = sub_diccionario.get("institucion")
+        titulo = sub_diccionario.get("titulo")
+        anio_graduacion = sub_diccionario.get("anio_graduacion")
+    else:
+        nivel = datos.get("nivel")
+        institucion = datos.get("institucion")
+        titulo = datos.get("titulo")
+        anio_graduacion = datos.get("anio_graduacion")
+
     #Verificar si existe el id de hoja de vida
     cursor.execute("SELECT id FROM hojas_vida WHERE id = %s", (id,))
     existe = cursor.fetchone()
@@ -214,10 +226,10 @@ def registro_estudios(id):
     sql = """INSERT INTO estudios (hoja_vida_id, nivel, institucion, titulo, anio_graduacion) VALUES (%s, %s, %s, %s, %s)"""
     valor = (
         id,
-        datos ["nivel"],
-        datos ["institucion"],
-        datos ["titulo"],
-        datos ["anio_graduacion"],
+        nivel,
+        institucion,
+        titulo,
+        anio_graduacion,
     )
     
     cursor.execute(sql,valor)
@@ -616,13 +628,13 @@ def registro_curso(id):
         conec.close()
         return {"Mensaje": "Id no existe"}, 404
 
-    sql = """INSERT INTO cursos (hoja_vida_id, nombre) VALUES (%s, %s)"""
-    valor = (
-        id,
-        datos["nombre"],
-    )
+    lista_cursos = datos.get("cursos", [])
 
-    cursor.execute(sql, valor)
+    sql = """INSERT INTO cursos (hoja_vida_id, nombre) VALUES (%s, %s)"""
+
+    for curso in lista_cursos:
+        cursor.execute(sql, (id, curso["nombre"]))
+
     conec.commit()
 
     # Manejo del id del curso
