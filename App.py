@@ -631,9 +631,15 @@ def registro_curso(id):
     lista_cursos = datos.get("cursos", [])
 
     sql = """INSERT INTO cursos (hoja_vida_id, nombre) VALUES (%s, %s)"""
-
-    for curso in lista_cursos:
-        cursor.execute(sql, (id, curso["nombre"]))
+    
+    for cursos in lista_cursos:
+        if isinstance(cursos, dict):
+            nombre = cursos.get("nombre")
+        else:
+            nombre = cursos
+            
+        if nombre:
+            cursor.execute(sql,(id, nombre))
 
     conec.commit()
 
