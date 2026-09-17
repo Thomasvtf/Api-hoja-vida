@@ -501,17 +501,18 @@ def registro_habilidades(id):
         conec.close()
         return {"Mensaje": "No se encontró la experiencia"}, 404
 
-    lista_habilidades = datos.get("habilidades")
+    lista_habilidades = datos.get("habilidades", [])
 
     sql = """INSERT INTO habilidades (experiencias_id, nombre) VALUES (%s, %s)"""
 
-    for hab in lista_habilidades:
-        if isinstance(hab, dict):
-            valores_habilidades = (
-                id,
-                hab.get("nombre") ,
-            )
-        cursor.execute(sql, valores_habilidades)
+    for habilidades in lista_habilidades:
+        if isinstance(habilidades, dict):
+            nombre_h = habilidades.get("nombre")
+        else:
+            nombre_h = habilidades
+            
+        if nombre_h:
+            cursor.execute(sql,(id, nombre_h))
 
     conec.commit()
 
