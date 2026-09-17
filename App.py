@@ -360,7 +360,7 @@ def registro_experiencia(id):
     conec = conectar_bd()
     cursor = conec.cursor(buffered = True)
     datos = request.json
-    
+
     #Verificar si existe el id de hoja de vida
     cursor.execute("SELECT id FROM hojas_vida WHERE id = %s", (id,))
     existe = cursor.fetchone()
@@ -370,16 +370,22 @@ def registro_experiencia(id):
         conec.close()
         return {"Mensaje":"Id no existe"}, 404
 
+    lista_experiencias = datos.get("experiencias", [])
+
     sql = """INSERT INTO experiencias (hoja_vida_id, empresa, cargo, tiempo, funciones) VALUES (%s, %s, %s, %s, %s)"""
-    valor = (
-        id,
-        datos ["empresa"],
-        datos ["cargo"],
-        datos ["tiempo"],
-        datos ["funciones"],
-    )
     
-    cursor.execute(sql,valor)
+    for exp in lista_experiencias:
+        if isinstance(exp, dict):
+            valores_exp = (
+                id,
+                exp.get("empresa"),                                          
+                exp.get("cargo"),                                          
+                exp.get("tiempo"),                                          
+                exp.get("funciones"),                                          
+            )
+    
+            cursor.execute(sql,valores_exp)
+
     conec.commit()
     
     #Manejo del id de la hoja de vida
@@ -484,6 +490,7 @@ def registro_habilidades(id):
 
     datos = request.json
 
+
     sql = """SELECT id FROM experiencias WHERE id = %s"""
     cursor.execute(sql, (id,))
 
@@ -494,14 +501,18 @@ def registro_habilidades(id):
         conec.close()
         return {"Mensaje": "No se encontró la experiencia"}, 404
 
+    lista_habilidades = datos.get("habilidades")
+
     sql = """INSERT INTO habilidades (experiencias_id, nombre) VALUES (%s, %s)"""
 
-    valor = (
-        id,
-        datos["nombre"] 
-    )
+    for hab in lista_habilidades:
+        if isinstance(hab, dict):
+            valores_habilidades = (
+                id,
+                hab.get("nombre") ,
+            )
+        cursor.execute(sql, valores_habilidades)
 
-    cursor.execute(sql, valor)
     conec.commit()
 
     cursor.close()
