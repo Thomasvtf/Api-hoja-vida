@@ -9,6 +9,81 @@ CORS(app)
 def inicio():
     return "Api hoja de vida funcionamiento"
 
+@app.route("/api/registro-usuario", methods=["POST"])
+def registro_usuario():
+    datos = request.json
+    if not datos:
+        return {"Mensaje": "No se enviaron datos"}, 400
+
+    if isinstance(datos.get("correo"), dict):
+        sub_diccionario = datos["correo"]
+        correo_nuevo = sub_diccionario.get("correo")
+        nombre = sub_diccionario.get("nombre")
+        password = sub_diccionario.get("password")
+        rol = sub_diccionario.get("rol")
+        estado = sub_diccionario.get("estado")
+        fecha_creacion = sub_diccionario.get("fecha_creacion")
+    else:
+        correo_nuevo = datos.get("correo")
+        nombre = datos.get("nombre")
+        password = datos.get("password")
+        rol = datos.get("rol")
+        estado = datos.get("estado")
+        fecha_creacion = datos.get("fecha_creacion")
+
+    # Validar que ningún campo esté vacío
+    campos = {
+        "nombre": nombre,
+        "correo": correo_nuevo,
+        "password": password,
+        "rol": rol,
+        "estado": estado,
+        "fecha_creacion": fecha_creacion
+    }
+
+    for campo, valor_campo in campos.items():
+        if valor_campo is None or str(valor_campo).strip() == "":
+            return {"Mensaje": f"El campo '{campo}' no puede estar vacío"}, 400
+
+    # Validar contraseña entre 8 y 15 caracteres
+    if not (8 <= len(str(password)) <= 15):
+        return {"Mensaje": "La contraseña debe tener entre 8 y 15 caracteres"}, 400
+
+    conec = conectar_bd()
+    cursor = conec.cursor()
+
+    cursor.execute("SELECT correo FROM usuarios WHERE correo = %s", [correo_nuevo])
+    busqueda = cursor.fetchone()
+
+    if busqueda:
+        cursor.close()
+        conec.close()
+        return {"Mensaje": "El correo ya existe"}, 400
+    
+    sql = """INSERT INTO usuarios (nombre, correo, password, rol, estado, fecha_creacion) VALUES (%s, %s, %s, %s, %s, %s)"""
+    valor = (
+        nombre,
+        correo_nuevo,
+        password,
+        rol,
+        estado,
+        fecha_creacion
+    )
+
+    cursor.execute(sql, valor)
+    conec.commit()
+
+    id_generado = cursor.lastrowid
+
+    cursor.close()
+    conec.close()
+
+    return {"Mensaje": "Usuario registrado exitosamente", "id": id_generado}, 201
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    pass
+
 @app.route("/probar")
 def probar_bd():
     conec = conectar_bd()
