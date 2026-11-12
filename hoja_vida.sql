@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 11-09-2026 a las 03:26:01
+-- Tiempo de generación: 12-11-2026 a las 17:21:48
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.0.30
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -38,11 +38,8 @@ CREATE TABLE `cursos` (
 --
 
 INSERT INTO `cursos` (`id`, `hoja_vida_id`, `nombre`) VALUES
-(2, 1, 'English does work II'),
-(3, 1, 'English does work III'),
-(4, 1, 'English does work level I'),
-(5, 1, 'React'),
-(6, 2, 'English work level I');
+(1, 3, 'React'),
+(2, 3, 'python');
 
 -- --------------------------------------------------------
 
@@ -64,10 +61,7 @@ CREATE TABLE `estudios` (
 --
 
 INSERT INTO `estudios` (`id`, `hoja_vida_id`, `nivel`, `institucion`, `titulo`, `anio_graduacion`) VALUES
-(2, 1, 'tecnologo', 'sena', 'tecnologo', '2025'),
-(3, 1, 'curso bocetacion', 'sena', 'curso bocetacion', '2026'),
-(4, 1, 'bachiller', 'externado simon bolivar', 'bachiller', '2023'),
-(8, 2, 'tecnico', 'sena', 'tecnico', '2024');
+(1, 3, '', 'la aurora', 'bachiller academico', '2024');
 
 -- --------------------------------------------------------
 
@@ -89,9 +83,7 @@ CREATE TABLE `experiencias` (
 --
 
 INSERT INTO `experiencias` (`id`, `hoja_vida_id`, `empresa`, `cargo`, `tiempo`, `funciones`) VALUES
-(1, 1, 'omni.pro', 'Desarrollador', '1 año', 'Desarrollo de front-end'),
-(3, 1, 'bia energy', 'Desarrollador', '1 año', 'Desarrollador front-end'),
-(4, 2, 'sena', 'desarrollador', '1 año', 'desarrollo de front-end y back-end');
+(1, 3, 'bia energy', 'desarrolladora web', '1 año', 'desarrollo de front_end');
 
 -- --------------------------------------------------------
 
@@ -110,10 +102,8 @@ CREATE TABLE `habilidades` (
 --
 
 INSERT INTO `habilidades` (`id`, `experiencias_id`, `nombre`) VALUES
-(2, 1, 'Aprendizaje rápido'),
-(3, 1, 'aprendizaje rapido'),
-(5, 4, 'comunicacion'),
-(7, 4, 'diseño');
+(1, 1, 'comunicacion'),
+(2, 1, 'desarrollo');
 
 -- --------------------------------------------------------
 
@@ -130,16 +120,44 @@ CREATE TABLE `hojas_vida` (
   `fotografia` varchar(255) DEFAULT NULL,
   `programa` varchar(150) DEFAULT NULL,
   `ficha` varchar(20) DEFAULT NULL,
-  `jornada` varchar(50) DEFAULT NULL
+  `jornada` varchar(50) DEFAULT NULL,
+  `usuario_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `hojas_vida`
 --
 
-INSERT INTO `hojas_vida` (`id`, `nombre`, `edad`, `ciudad`, `correo`, `fotografia`, `programa`, `ficha`, `jornada`) VALUES
-(1, 'Thomas', 19, 'Bogotá', 'thomas@gmail.com', 'foto', 'ADSO', '2222', 'diurna'),
-(2, 'Daniela', 21, 'bogota', 'dani@gmail.com', 'foto', 'ADSO', '2217', 'diurna');
+INSERT INTO `hojas_vida` (`id`, `nombre`, `edad`, `ciudad`, `correo`, `fotografia`, `programa`, `ficha`, `jornada`, `usuario_id`) VALUES
+(1, 'Low', 36, 'nuevo mundo', 'low@gmail.com', 'foto', 'ADSO', '2222', 'diurna', NULL),
+(2, 'Low', 36, 'nuevo mundo', 'low@gmail.com', 'foto', 'ADSO', '2222', 'diurna', NULL),
+(3, 'Daniela', 21, 'bogota', 'dani@gmail.com', 'blob:http://localhost:5173/73f1041d-79be-4035-a569-b031a7a988ce', 'ADSO', '2222', 'mixta', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuarios`
+--
+
+CREATE TABLE `usuarios` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `correo` varchar(150) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `rol` enum('aprendiz','administrador') NOT NULL DEFAULT 'aprendiz',
+  `estado` tinyint(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (`id`, `nombre`, `correo`, `password`, `rol`, `estado`, `fecha_creacion`) VALUES
+(1, 'Daniela', 'dani@gmail.com', 'nose22012025', 'aprendiz', 0, '2026-11-10 05:00:00'),
+(2, 'Thomas', 'thomas@gmail.com', 'nose22012025', 'aprendiz', 0, '2026-11-11 05:00:00'),
+(3, 'Thomas Vargas', 'thomasv@gmail.com', 'nose22012025', 'aprendiz', 0, '2026-11-11 05:00:00'),
+(4, 'Cobyto', 'cobyto@gmail.com', 'scrypt:32768:8:1$EoRpbJ6FqOSYi997$14522e953fc16ae450b03bc4bcbcc8d77404efb21129094eedbdff6034c3965f631c61b8c4b833803a8efbfb63e375b2c8602489f8eba3969a1fe6a74ce093b3', '', 1, '2026-11-12 16:19:02');
 
 --
 -- Índices para tablas volcadas
@@ -178,8 +196,14 @@ ALTER TABLE `habilidades`
 --
 ALTER TABLE `hojas_vida`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `correo` (`correo`),
-  ADD UNIQUE KEY `id` (`id`);
+  ADD UNIQUE KEY `usuario_id` (`usuario_id`);
+
+--
+-- Indices de la tabla `usuarios`
+--
+ALTER TABLE `usuarios`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `correo` (`correo`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -189,31 +213,37 @@ ALTER TABLE `hojas_vida`
 -- AUTO_INCREMENT de la tabla `cursos`
 --
 ALTER TABLE `cursos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `estudios`
 --
 ALTER TABLE `estudios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `experiencias`
 --
 ALTER TABLE `experiencias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `habilidades`
 --
 ALTER TABLE `habilidades`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `hojas_vida`
 --
 ALTER TABLE `hojas_vida`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de la tabla `usuarios`
+--
+ALTER TABLE `usuarios`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Restricciones para tablas volcadas
@@ -242,6 +272,12 @@ ALTER TABLE `experiencias`
 --
 ALTER TABLE `habilidades`
   ADD CONSTRAINT `habilidades_ibfk_1` FOREIGN KEY (`experiencias_id`) REFERENCES `experiencias` (`id`);
+
+--
+-- Filtros para la tabla `hojas_vida`
+--
+ALTER TABLE `hojas_vida`
+  ADD CONSTRAINT `fk_hoja_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
