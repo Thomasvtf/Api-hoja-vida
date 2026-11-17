@@ -35,34 +35,28 @@ def inicio():
 
 @app.route("/api/registro-usuario", methods=["POST"])
 def registro_usuario():
+    conec = conectar_bd()
+    cursor = conec.cursor()
+
     datos = request.json
     if not datos:
         return {"Mensaje": "No se enviaron datos"}, 400
 
     if isinstance(datos.get("correo"), dict):
         sub_diccionario = datos["correo"]
-        correo_nuevo = sub_diccionario.get("correo")
-        nombre = sub_diccionario.get("nombre")
-        password = sub_diccionario.get("password")
-        rol = sub_diccionario.get("rol")
-        estado = sub_diccionario.get("estado")
-        fecha_creacion = sub_diccionario.get("fecha_creacion")
+        correo_nuevo = sub_diccionario.get("correo", "").strip()
+        nombre = sub_diccionario.get("nombre", "").strip().lower()
+        password = sub_diccionario.get("password", "")
     else:
-        correo_nuevo = datos.get("correo")
-        nombre = datos.get("nombre")
-        password = datos.get("password")
-        rol = datos.get("rol")
-        estado = datos.get("estado")
-        fecha_creacion = datos.get("fecha_creacion")
+        correo_nuevo = datos.get("correo", "").strip()
+        nombre = datos.get("nombre", "").strip().lower()
+        password = datos.get("password", "")
 
     # Validar que ningún campo esté vacío
     campos = {
         "nombre": nombre,
         "correo": correo_nuevo,
-        "password": password,
-        "rol": rol,
-        "estado": estado,
-        "fecha_creacion": fecha_creacion
+        "password": password
     }
 
     for campo, valor_campo in campos.items():
@@ -73,8 +67,7 @@ def registro_usuario():
     if not (8 <= len(str(password)) <= 15):
         return {"Mensaje": "La contraseña debe tener entre 8 y 15 caracteres"}, 400
 
-    conec = conectar_bd()
-    cursor = conec.cursor()
+   
 
     cursor.execute("SELECT correo FROM usuarios WHERE correo = %s", [correo_nuevo])
     busqueda = cursor.fetchone()
@@ -83,18 +76,13 @@ def registro_usuario():
         cursor.close()
         conec.close()
         return {"Mensaje": "El correo ya existe"}, 400
-    
-    sql = """INSERT INTO usuarios (nombre, correo, password, rol, estado, fecha_creacion) VALUES (%s, %s, %s, %s, %s, %s)"""
-    valor = (
-        nombre,
-        correo_nuevo,
-        password,
-        rol,
-        estado,
-        fecha_creacion
-    )
 
-    cursor.execute(sql, valor)
+    password_hash = generate_password_hash(password)
+    
+    sql = """INSERT INTO usuarios (nombre, correo, password, rol)
+             VALUES (%s, %s, %s, 'aprendiz')"""
+
+    cursor.execute(sql, (nombre, correo_nuevo, password_hash))
     conec.commit()
 
     id_generado = cursor.lastrowid
@@ -156,9 +144,8 @@ def probar_bd():
             "mensaje":"database conectada"
         }
         
-@app.route("/api/registro-hoja-vida", methods = ["POST"])
-@jwt_required()
-def registro_hoja_vida():
+@app.route("/api/registro-hoja-vida/<int:id>", methods = ["POST"])
+def registro_hoja_vida(id):
     conec = conectar_bd()
     cursor = conec.cursor()
     datos = request.json
@@ -187,6 +174,14 @@ def registro_hoja_vida():
     #Consultar si el correo ya existe
     cursor.execute("SELECT correo FROM hojas_vida WHERE correo = %s", [correo_nuevo])
     busqueda = cursor.fetchone()
+
+    cursor.execute("SELECT id FROM usuarios WHERE id = %s", (id,))
+    existe = cursor.fetchone()
+    
+    if existe is None:
+        cursor.close()
+        conec.close()
+        return {"Mensaje":"Id no existe"}, 404
     
     if busqueda:
         cursor.close()
@@ -195,7 +190,8 @@ def registro_hoja_vida():
 
         return {"Mensaje":"El correo ya existe"}
         
-    sql = """INSERT INTO hojas_vida (nombre, edad, ciudad, correo, fotografia, programa, ficha, jornada) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+    sql = """INSERT INTO hojas_vida (nombre, edad, ciudad, correo, fotografia, programa, ficha, jornada, usuario_id) 
+             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
     valor = (
         nombre,
         edad,
@@ -204,7 +200,8 @@ def registro_hoja_vida():
         fotografia,
         programa,
         ficha,
-        jornada
+        jornada,
+        id
     )
     
     cursor.execute(sql,valor)
@@ -285,7 +282,7 @@ def eliminar_hoja_vida(id):
     
 #Actualizar hoja de vida
 @app.route("/api/actualizar-hoja-vida/<int:id>", methods = ["PUT"])
-@jwt_required()
+
 def actualizar_hoja_vida(id):
     datos = request.json
     conec = conectar_bd()
@@ -340,7 +337,7 @@ def actualizar_hoja_vida(id):
 
 #Registro estudios
 @app.route("/api/registro-estudios/<int:id>", methods = ["POST"])
-@jwt_required()
+
 def registro_estudios(id):
     conec = conectar_bd()
     cursor = conec.cursor(buffered = True)
@@ -418,7 +415,7 @@ def estudios_hoja_vida(id):
 
 #Consultar un estudio especifico.
 @app.route("/api/consultar-estudio/<int:id>", methods = ["GET"])
-@jwt_required()
+
 def consultar_estudio(id):
     conec = conectar_bd()
     cursor = conec.cursor(dictionary=True)
@@ -504,7 +501,7 @@ def eliminar_estudio(id):
 
 #Registro experiencias
 @app.route("/api/registro-experiencia/<int:id>", methods = ["POST"])
-@jwt_required()
+
 def registro_experiencia(id):
     conec = conectar_bd()
     cursor = conec.cursor(buffered = True)
