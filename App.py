@@ -232,7 +232,7 @@ def obtener_hojasvidaid(id):
     
     #Qué pasa cuando es nulo
     if datos is None:
-        return{"No se encontro la hoja de vida"}
+        return{"mensaje":"No se encontro la hoja de vida"}
     else:
         return datos
         
